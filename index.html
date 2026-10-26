@@ -89,6 +89,12 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,
 .btn{appearance:none;font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--plum);color:var(--plum-ink);cursor:pointer;font-weight:500}
 .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
 .btn.block{width:100%}
+.calc-link{display:flex;align-items:center;gap:12px;padding:16px;border-radius:18px;background:var(--plum);color:var(--plum-ink);text-decoration:none}
+.calc-link .ci{font-size:24px;flex:none}
+.calc-link .ct{flex:1;min-width:0}
+.calc-link .ct b{display:block;font-weight:600;font-size:15px;line-height:1.4}
+.calc-link .ct small{display:block;font-size:13px;opacity:.85;margin-top:2px}
+.calc-link .ca{font-size:24px;flex:none}
 a{color:var(--plum)}
 
 /* log */
@@ -275,6 +281,7 @@ function vToday(){
   <textarea data-f="done" placeholder="예: 엘리베이터 대신 계단">${esc(e.done)}</textarea>
   <label class="f mt"><span>오늘을 한 줄로</span><input type="text" data-f="memo" value="${esc(e.memo)}"></label>
   </section>
+  <section><a class="calc-link" href="https://luamindnbody-dev.github.io/macrocalculator/" target="_blank" rel="noopener"><span class="ci">🧮</span><span class="ct"><b>루아핏 개인별 맞춤 칼로리 계산 &amp; 영양소 구성 계산기</b><small>내 하루 칼로리와 탄단지 비율을 알아보세요</small></span><span class="ca">›</span></a></section>
   ${S.entries[sel]&&!isEmpty(S.entries[sel])?`<section><button class="btn ghost block" data-del>이 날 기록 지우기</button></section>`:''}
   `;
 }
