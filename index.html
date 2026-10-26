@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>루아핏 습관 기록</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF7FD;--surface:#FFFFFF;--ink:#2A1F33;--muted:#77688A;--plum:#6B4594;--plum-ink:#FFFFFF;
+  --lilac:#EFE6F8;--line:#E3D8EE;--ok:#2F8F74;--ok-soft:#DDF2EA;--great:#1F6E58;
+  color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#17111D;--surface:#211A2A;--ink:#F1EAF7;--muted:#A898B8;--plum:#BC9DE3;--plum-ink:#1B1222;
+    --lilac:#2D2240;--line:#3A2E48;--ok:#5CC6A6;--ok-soft:#1C3832;--great:#8FE0C6;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17111D;--surface:#211A2A;--ink:#F1EAF7;--muted:#A898B8;--plum:#BC9DE3;--plum-ink:#1B1222;
+  --lilac:#2D2240;--line:#3A2E48;--ok:#5CC6A6;--ok-soft:#1C3832;--great:#8FE0C6;color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:520px;margin:0 auto;padding:20px 18px 110px}
+h1,h2,.display{font-family:"Gowun Dodum","Apple SD Gothic Neo",sans-serif;font-weight:400}
+header.top{padding:8px 0 4px}
+.brand{font-family:"Gowun Dodum",sans-serif;color:var(--plum);font-size:15px}
+h1{font-size:28px;line-height:1.3;margin:4px 0 0}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 0}
+section{margin-top:28px}
+h2{font-size:20px;margin:0 0 10px}
+.hint{color:var(--muted);font-size:13.5px;margin:-4px 0 12px}
+
+/* week strip — the one memorable thing */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:20px}
+.day{appearance:none;border:0;background:none;color:var(--ink);font:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0;cursor:pointer}
+.day .w{font-size:12px;color:var(--muted)}
+.day .dot{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:500;border:1.5px dashed var(--line);background:transparent;transition:transform .15s}
+.day.k1 .dot{border:0;background:var(--ok-soft);color:var(--ok)}
+.day.k2 .dot{border:0;background:var(--ok);color:var(--surface)}
+.day.has .dot{border-style:solid}
+.day.sel .dot{outline:2px solid var(--plum);outline-offset:3px}
+.day.future{opacity:.35}
+.legend{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:4px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.habit{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.habit:last-child{border-bottom:0}
+.habit input{width:22px;height:22px;accent-color:var(--ok);flex:none;margin:0}
+.habit .tag{font-size:12px;color:var(--muted);flex:none;width:34px}
+.habit .t{flex:1}
+.count{margin-top:12px;font-size:15px}
+.count b{color:var(--ok);font-weight:600}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.f{display:block}
+label.f span{display:block;font-size:13.5px;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+textarea{resize:vertical;min-height:72px}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,.habit:focus-within{outline:2px solid var(--plum);outline-offset:2px}
+
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;cursor:pointer}
+.stepper .n{font-size:24px;min-width:56px;text-align:center;font-family:"Gowun Dodum",sans-serif}
+.cups{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.cups i{width:14px;height:20px;border-radius:3px 3px 5px 5px;border:1.5px solid var(--plum);opacity:.45}
+.cups i.on{background:var(--plum);opacity:1}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{appearance:none;font:inherit;font-size:14.5px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:var(--plum-ink)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch{appearance:none;width:52px;height:30px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;border:0;flex:none;margin:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:left .15s}
+.switch:checked{background:var(--plum)}
+.switch:checked::after{left:25px}
+.mt{margin-top:12px}
+
+.note{background:var(--lilac);border-radius:16px;padding:14px 16px;font-size:14.5px}
+.note b{font-weight:600}
+.btn{appearance:none;font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--plum);color:var(--plum-ink);cursor:pointer;font-weight:500}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.block{width:100%}
+a{color:var(--plum)}
+
+/* log */
+.avg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.avg .v{font-family:"Gowun Dodum",sans-serif;font-size:30px;line-height:1.2}
+.avg .v small{font-size:15px;color:var(--muted)}
+.avg .l{font-size:13px;color:var(--muted)}
+.diff{margin-top:12px;font-size:15px}
+.chart{margin-top:14px;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto}
+.entry{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;font:inherit;color:inherit}
+.entry:last-child{border-bottom:0}
+.entry .d{flex:none;width:48px;font-family:"Gowun Dodum",sans-serif;font-size:15px}
+.entry .d small{display:block;color:var(--muted);font-size:12px;font-family:"IBM Plex Sans KR",sans-serif}
+.entry .b{flex:1;min-width:0;font-size:14.5px}
+.entry .meta{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);font-size:14.5px;padding:8px 2px}
+
+/* plan */
+.prow{padding:10px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.prow .k{font-size:12px;color:var(--muted)}
+.prow .q{font-size:15px;margin:2px 0 6px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cols h3{font-size:14px;font-weight:600;margin:0 0 8px}
+.cols input{margin-bottom:8px}
+.callout{border-left:3px solid var(--plum);padding:4px 0 4px 12px;color:var(--muted);font-size:14px;margin-top:12px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+/* month */
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+.mnav .t{font-family:"Gowun Dodum",sans-serif;font-size:20px}
+.mnav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.mnav button:disabled{opacity:.3;cursor:default}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.stat .l{font-size:12.5px;color:var(--muted)}
+.stat .v{font-family:"Gowun Dodum",sans-serif;font-size:24px;line-height:1.3}
+.stat .v small{font-size:13px;color:var(--muted)}
+.stat .s{font-size:12.5px;color:var(--muted)}
+.tracker{overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px 8px 8px 0}
+.tracker table{border-collapse:separate;border-spacing:3px}
+.tracker th{font-weight:400;font-size:11px;color:var(--muted);text-align:center;line-height:1.2}
+.tracker th small{display:block;font-size:10px}
+.tracker th.sun{color:var(--plum)}
+.tracker .hn{position:sticky;left:0;z-index:1;background:var(--surface);text-align:left;font-size:13px;color:var(--ink);min-width:118px;max-width:118px;padding:0 6px 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tracker .hn .tag{display:block;font-size:10.5px;color:var(--muted)}
+.cell{appearance:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--surface);font-size:13px;padding:0;cursor:pointer;display:block}
+.cell.on{background:var(--ok);border-color:var(--ok)}
+.cell:disabled{opacity:.3;cursor:default}
+.tracker td.rate{font-size:12.5px;color:var(--ok);font-weight:600;padding:0 8px;text-align:right}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+nav.tabs .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0 12px;text-decoration:none;color:var(--muted);font-size:13px}
+nav.tabs a .ic{font-size:20px;line-height:1}
+nav.tabs a[aria-current="page"]{color:var(--plum);font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.show{opacity:1}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<nav class="tabs" aria-label="메뉴"><div class="in">
+  <a href="#today" data-tab="today"><span class="ic">✍️</span>오늘 기록</a>
+  <a href="#week" data-tab="week"><span class="ic">📈</span>주간 보기</a>
+  <a href="#month" data-tab="month"><span class="ic">🗓️</span>월간 보기</a>
+  <a href="#plan" data-tab="plan"><span class="ic">📝</span>내 계획</a>
+</div></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+const KEY='luafit-habit-v1';
+const EX=['걷기','근력','유산소','필라테스','요가','스트레칭','쉼','기타'];
+const EMO=['편안','뿌듯','피곤','스트레스','불안','우울','외로움','화남','지루함'];
+const WD=['일','월','화','수','목','금','토'];
+const LIFE=[
+ ['수면','취침 · 기상 시간','예: 12시 눕기 / 7시 기상'],
+ ['수면','폰 내려놓는 시간','예: 11시 30분'],
+ ['영양','식사 횟수 · 시간','예: 하루 3회 (8시 / 12시 / 18시)'],
+ ['영양','물 (몸무게 × 30ml)','예: 60kg → 약 1.8L'],
+ ['영양','끼니마다 단백질 (손바닥 크기)','예: 계란, 두부, 닭가슴살'],
+ ['영양','커피 마감 시간','예: 오후 2시까지'],
+ ['영양','야식 · 간식 규칙 (언제, 뭘로)','예: 9시 이후엔 우유 한 잔만'],
+ ['운동','운동 요일 · 시간대 · 종류','예: 월수금 퇴근 후 근력 30분'],
+ ['운동','하루 걸음 수','예: 7000보'],
+ ['생활습관','내 생활 패턴','직장인 / 육아 / 교대근무 / 학생 등'],
+ ['생활습관','만약에 계획','예: 야근하면 → 10분 스트레칭만'],
+ ['체크','주간 점검 요일','예: 일요일']
+];
+
+function norm(s){
+  s=s||{};s.plan=s.plan||{};
+  const fit5=a=>{a=Array.isArray(a)?a.slice(0,5):[];while(a.length<5)a.push('');return a};
+  s.plan.drop=fit5(s.plan.drop);s.plan.fill=fit5(s.plan.fill);
+  s.plan.life=s.plan.life||{};s.plan.cal=s.plan.cal||{};
+  s.entries=s.entries||{};return s;
+}
+let S;try{S=norm(JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=norm({})}
+let storageOk=true;
+function save(quiet){
+  try{localStorage.setItem(KEY,JSON.stringify(S));if(!quiet)toast('저장했어요')}
+  catch(e){if(storageOk){storageOk=false;toast('이 브라우저에선 기록이 저장되지 않아요')}}
+}
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1400)}
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const keyOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=k=>{const[a,b,c]=k.split('-').map(Number);return new Date(a,b-1,c)};
+const today=()=>keyOf(new Date());
+function weekStart(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+let sel=today();
+
+function habits(){
+  const out=[];S.plan.fill.forEach((t,i)=>{if(t.trim())out.push({id:'f'+i,t,tag:'채울'})});
+  S.plan.drop.forEach((t,i)=>{if(t.trim())out.push({id:'d'+i,t:t+' 안 하기',tag:'버릴',raw:t})});
+  return out;
+}
+function entry(k,create){if(!S.entries[k]&&create)S.entries[k]={habits:[],ex:[],emo:[],water:0};return S.entries[k]}
+function kept(e){return e&&e.habits?e.habits.length:0}
+function isEmpty(e){return !e||(!kept(e)&&!e.weight&&!e.water&&!e.sleep&&!(e.ex||[]).length&&!(e.emo||[]).length&&!e.binge&&!e.done&&!e.memo&&!e.exMin)}
+function latestWeight(){const ks=Object.keys(S.entries).sort().reverse();for(const k of ks){const w=parseFloat(S.entries[k].weight);if(w)return w}return parseFloat(S.plan.cal.now)||0}
+function avgWeek(ws){let s=0,n=0;for(let i=0;i<7;i++){const e=S.entries[keyOf(addDays(ws,i))];const w=e&&parseFloat(e.weight);if(w){s+=w;n++}}return n?{v:s/n,n}:null}
+
+/* ---------- views ---------- */
+function vToday(){
+  const d=parse(sel),ws=weekStart(d),t=today();
+  let strip='';
+  for(let i=0;i<7;i++){
+    const x=addDays(ws,i),k=keyOf(x),e=S.entries[k],n=kept(e);
+    const cls=['day',n>=3?'k2':n>=1?'k1':'',e&&!isEmpty(e)?'has':'',k===sel?'sel':'',k>t?'future':''].join(' ');
+    strip+=`<button class="${cls}" data-day="${k}" ${k>t?'disabled':''} aria-label="${x.getMonth()+1}월 ${x.getDate()}일, 지킨 습관 ${n}개"><span class="w">${WD[x.getDay()]}</span><span class="dot">${x.getDate()}</span></button>`;
+  }
+  const e=entry(sel)||{habits:[],ex:[],emo:[],water:0};
+  const hs=habits();
+  const n=kept(e);
+  const msg=n===0?'하나만 지켜도 괜찮아요.':n<=2?`<b>${n}개</b> 지켰어요. 오늘은 성공이에요.`:`<b>${n}개</b>나 지켰어요. 충분히 잘하고 있어요.`;
+  const lw=latestWeight(),target=lw?Math.round(lw*30/250):8;
+  let cups='';const w=e.water||0;for(let i=0;i<Math.max(target,w);i++)cups+=`<i class="${i<w?'on':''}"></i>`;
+  const isToday=sel===t;
+  return `
+  <header class="top"><div class="brand">💜 루아핏 습관 기록</div>
+  <h1>${isToday?'오늘':`${d.getMonth()+1}월 ${d.getDate()}일`}, 하루 1분이면 돼요</h1>
+  <p class="sub">의지 말고, 기록을 믿으세요. 비워 둔 칸이 있어도 괜찮아요.</p></header>
+  <div class="week" role="group" aria-label="이번 주">${strip}</div>
+  <div class="legend"><span><i style="background:var(--ok-soft)"></i>1~2개 성공</span><span><i style="background:var(--ok)"></i>3개 이상</span></div>
+
+  <section><h2>지킨 습관</h2>
+  ${hs.length?`<div class="panel">${hs.map(h=>`<label class="habit"><input type="checkbox" data-habit="${h.id}" ${e.habits.includes(h.id)?'checked':''}><span class="tag">${h.tag}</span><span class="t">${esc(h.t)}</span></label>`).join('')}
+  <div class="count">${msg}</div></div>`
+  :`<div class="note">아직 습관을 안 정했어요. <b>버릴 습관, 채울 습관을 5개까지</b> 정하면 여기서 매일 체크할 수 있어요.<div class="mt"><a class="btn" href="#plan" style="display:inline-block;text-decoration:none">습관 정하러 가기</a></div></div>`}
+  </section>
+
+  <section><h2>몸 기록</h2>
+  <div class="grid2">
+    <label class="f"><span>체중 (kg)</span><input type="number" inputmode="decimal" step="0.1" data-f="weight" value="${esc(e.weight)}" placeholder="아침 공복"></label>
+    <label class="f"><span>수면 시간</span><input type="number" inputmode="decimal" step="0.5" data-f="sleep" value="${esc(e.sleep)}" placeholder="예: 6.5"></label>
+  </div>
+  <div class="panel mt">
+    <div class="toggle"><div><div>물</div><div class="hint" style="margin:0">목표 약 ${target}잔 (한 잔 250ml, 몸무게 × 30ml)</div></div>
+    <div class="stepper"><button data-water="-1" aria-label="물 한 잔 빼기">−</button><span class="n">${w}</span><button data-water="1" aria-label="물 한 잔 더하기">+</button></div></div>
+    <div class="cups" aria-hidden="true">${cups}</div>
+  </div></section>
+
+  <section><h2>운동</h2>
+  <div class="chips">${EX.map(x=>`<button class="chip" data-ex="${x}" aria-pressed="${(e.ex||[]).includes(x)}">${x}</button>`).join('')}</div>
+  <div class="grid2 mt">
+    <label class="f"><span>운동 시간 (분)</span><input type="number" inputmode="numeric" data-f="exMin" value="${esc(e.exMin)}" placeholder="예: 30"></label>
+    <label class="f ${(e.ex||[]).includes('기타')?'':'hidden'}"><span>기타 운동</span><input type="text" data-f="exEtc" value="${esc(e.exEtc)}" placeholder="예: 수영, 등산"></label>
+  </div></section>
+
+  <section><h2>오늘 마음</h2>
+  <div class="chips">${EMO.map(x=>`<button class="chip" data-emo="${x}" aria-pressed="${(e.emo||[]).includes(x)}">${x}</button>`).join('')}</div>
+  <div class="panel mt">
+    <label class="toggle"><span>폭식한 날</span><input type="checkbox" class="switch" data-binge ${e.binge?'checked':''}></label>
+    ${e.binge?`<label class="f mt"><span>폭식 이유, 탓하지 말고 사실만 한 줄</span><input type="text" data-f="bingeWhy" value="${esc(e.bingeWhy)}" placeholder="예: 점심 거르고 밤늦게 퇴근"></label>`:''}
+  </div></section>
+
+  <section><h2>오늘 해낸 것</h2>
+  <p class="hint">못한 것 말고 해낸 것만요. 물 2리터 하나만 지켜도 잘한 거예요.</p>
+  <textarea data-f="done" placeholder="예: 엘리베이터 대신 계단">${esc(e.done)}</textarea>
+  <label class="f mt"><span>오늘을 한 줄로</span><input type="text" data-f="memo" value="${esc(e.memo)}"></label>
+  </section>
+  ${S.entries[sel]&&!isEmpty(S.entries[sel])?`<section><button class="btn ghost block" data-del>이 날 기록 지우기</button></section>`:''}
+  `;
+}
+
+function vWeek(){
+  const t=parse(today()),ws=weekStart(t);
+  const cur=avgWeek(ws),prev=avgWeek(addDays(ws,-7));
+  let diff='이번 주 체중을 기록하면 지난주와 비교해 드려요.';
+  if(cur&&prev){const d=cur.v-prev.v;diff=Math.abs(d)<0.05?'지난주와 거의 같아요. 꾸준함이 쌓이는 중이에요.':d<0?`지난주보다 <b>${Math.abs(d).toFixed(1)}kg</b> 줄었어요.`:`지난주보다 <b>${d.toFixed(1)}kg</b> 늘었어요. 수분이나 짠 음식, 생리 주기 영향일 수 있으니 다음 주도 같이 봐요.`}
+  else if(cur)diff='지난주 기록이 생기면 비교할 수 있어요.';
+  // chart: last 8 weeks
+  const pts=[];for(let i=7;i>=0;i--){const w=addDays(ws,-7*i),a=avgWeek(w);pts.push({w,a})}
+  const have=pts.filter(p=>p.a);
+  let chart='';
+  if(have.length>=2){
+    const vs=have.map(p=>p.a.v),mn=Math.min(...vs)-0.5,mx=Math.max(...vs)+0.5;
+    const W=480,H=150,px=i=>24+i*(W-48)/7,py=v=>14+(H-44)*(1-(v-mn)/(mx-mn));
+    let path='',dots='',labs='';
+    pts.forEach((p,i)=>{labs+=`<text x="${px(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${p.w.getMonth()+1}/${p.w.getDate()}</text>`;
+      if(p.a){path+=(path?'L':'M')+px(i)+' '+py(p.a.v);dots+=`<circle cx="${px(i)}" cy="${py(p.a.v)}" r="4" fill="var(--plum)"/><text x="${px(i)}" y="${py(p.a.v)-10}" text-anchor="middle" font-size="11" fill="var(--ink)">${p.a.v.toFixed(1)}</text>`}});
+    chart=`<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 8주 주간 평균 체중"><path d="${path}" fill="none" stroke="var(--plum)" stroke-width="2"/>${dots}${labs}</svg></div>`;
+  }
+  // binge pattern
+  const ks=Object.keys(S.entries).filter(k=>!isEmpty(S.entries[k])).sort().reverse();
+  const b=ks.filter(k=>S.entries[k].binge);
+  const row=k=>{const e=S.entries[k],d=parse(k);const bits=[];
+    if(kept(e))bits.push(`습관 ${kept(e)}개`);if(e.weight)bits.push(e.weight+'kg');if(e.sleep)bits.push(`수면 ${e.sleep}시간`);if(e.water)bits.push(`물 ${e.water}잔`);
+    if((e.ex||[]).length)bits.push((e.ex||[]).join(', ')+(e.exMin?` ${e.exMin}분`:''));
+    const top=e.binge?(e.bingeWhy?esc(e.bingeWhy):'폭식한 날'):(e.done?esc(e.done):e.memo?esc(e.memo):'');
+    return `<button class="entry" data-open="${k}"><span class="d">${d.getMonth()+1}/${d.getDate()}<small>${WD[d.getDay()]}요일</small></span><span class="b">${top?`<div>${top}</div>`:''}<div class="meta">${bits.join(', ')||'기록 있음'}${(e.emo||[]).length?`<br>마음: ${(e.emo||[]).join(', ')}`:''}</div></span></button>`};
+  return `
+  <header class="top"><div class="brand">💜 루아핏 습관 기록</div>
+  <h1>하루 체중 말고, 일주일 평균</h1>
+  <p class="sub">하루 체중은 수분, 짠 음식, 생리 주기 때문에 원래 왔다 갔다 해요. 오늘 숫자에 흔들리지 마세요.</p></header>
+  <section><div class="panel">
+    <div class="avg"><div><div class="l">이번 주 평균</div><div class="v">${cur?cur.v.toFixed(1):'–'}<small> kg</small></div><div class="l">${cur?cur.n+'일 기록':''}</div></div>
+    <div><div class="l">지난주 평균</div><div class="v">${prev?prev.v.toFixed(1):'–'}<small> kg</small></div><div class="l">${prev?prev.n+'일 기록':''}</div></div></div>
+    <div class="diff">${diff}</div>${chart}
+  </div></section>
+  <section><h2>폭식한 날 모아 보기</h2>
+  <p class="hint">일주일에 한 번 여기를 보세요. 수면이나 마음에 공통점이 보일 거예요.</p>
+  <div class="panel">${b.length?b.map(row).join(''):'<div class="empty">아직 없어요. 있어도 괜찮아요, 패턴을 찾는 용도예요.</div>'}</div></section>
+  <section><h2>전체 기록</h2>
+  <div class="panel">${ks.length?ks.map(row).join(''):'<div class="empty">첫 기록을 남기면 여기에 쌓여요.</div>'}</div></section>
+  <section><div class="callout">기록은 나를 혼내려는 게 아니라 패턴을 찾으려는 거예요. 폭식이 자주 반복되거나 일상이 힘들 만큼 괴롭다면 전문가 상담을 권해요.</div></section>`;
+}
+
+function vPlan(){
+  const p=S.plan,c=p.cal,lw=latestWeight();
+  return `
+  <header class="top"><div class="brand">💜 루아핏 습관 기록</div>
+  <h1>내 생활에 맞는 계획</h1>
+  <p class="sub">남이 정한 정답 말고, 내가 지킬 수 있는 만큼만요.</p></header>
+  <section><h2>나의 습관</h2>
+  <p class="hint">수면, 영양, 운동, 생활습관에서 골라요. 다 지키려고 하지 마세요. 하루 한두 개면 성공이에요.</p>
+  <div class="panel"><div class="cols">
+    <div><h3>버릴 습관</h3>${[0,1,2,3,4].map(i=>`<input type="text" data-plan="drop.${i}" value="${esc(p.drop[i])}" placeholder="${['예: 자기 전 핸드폰','예: 야식','예: 배달앱','예: 단 음료','예: 엘리베이터'][i]}">`).join('')}</div>
+    <div><h3>채울 습관</h3>${[0,1,2,3,4].map(i=>`<input type="text" data-plan="fill.${i}" value="${esc(p.fill[i])}" placeholder="${['예: 12시 전에 눕기','예: 물 2리터','예: 하루 20분 걷기','예: 끼니마다 단백질','예: 스트레칭 10분'][i]}">`).join('')}</div>
+  </div></div></section>
+  <section><h2>나의 생활 계획</h2>
+  <div class="panel">${LIFE.map((r,i)=>`<div class="prow"><div class="k">${r[0]}</div><div class="q">${r[1]}</div><input type="text" data-plan="life.${i}" value="${esc(p.life[i])}" placeholder="${esc(r[2])}"></div>`).join('')}</div>
+  ${lw?`<div class="callout">지금 체중 기준 물 목표는 약 ${(lw*0.03).toFixed(1)}L예요.</div>`:''}
+  </section>
+  <section><h2>칼로리 대략 계산하기</h2>
+  <p class="hint">정확하지 않아도 괜찮아요. <a href="https://luamindnbody-dev.github.io/macrocalculator/" target="_blank" rel="noopener">루아핏 칼로리 계산기</a>에서 계산하고 숫자만 옮겨 적어요.</p>
+  <div class="panel"><div class="grid2">
+    <label class="f"><span>현재 체중 (kg)</span><input type="number" inputmode="decimal" step="0.1" data-plan="cal.now" value="${esc(c.now)}"></label>
+    <label class="f"><span>목표 체중 (kg)</span><input type="number" inputmode="decimal" step="0.1" data-plan="cal.goal" value="${esc(c.goal)}"></label>
+    <label class="f"><span>하루 유지 칼로리</span><input type="number" inputmode="numeric" data-plan="cal.maint" value="${esc(c.maint)}" placeholder="kcal"></label>
+    <label class="f"><span>하루 줄일 칼로리</span><input type="number" inputmode="numeric" data-plan="cal.cut" value="${esc(c.cut)}" placeholder="kcal"></label>
+  </div>
+  <div class="callout">하루 약 500kcal를 줄이면 일주일에 대략 0.5kg 정도 빠지는 걸 기준으로 많이 잡아요. 개인차가 있으니 참고용으로만 보세요.</div></div></section>
+  <section><h2>기록 백업하기</h2>
+  <div class="note">기록은 이 폰의 브라우저에만 저장돼요. 다른 사람은 볼 수 없지만, 브라우저 데이터를 지우거나 폰을 바꾸면 함께 사라져요. 가끔 백업 코드를 복사해서 카톡 나에게 보내기나 메모장에 붙여두세요.</div>
+  <div class="mt"><button class="btn block" data-bcopy>백업 코드 복사하기</button></div>
+  <div class="panel mt">
+    <h3>백업 불러오기</h3>
+    <p class="hint">새 폰이나 다른 브라우저에서 이 앱을 열고, 복사해 둔 백업 코드를 붙여넣어요.</p>
+    <textarea id="bin" placeholder="백업 코드를 여기에 붙여넣기"></textarea>
+    <div class="mt"><button class="btn ghost block" data-bload>백업 불러오기</button></div>
+  </div></section>
+  <section><div class="mt"><button class="btn ghost block" data-reset>모든 기록과 계획 지우기</button></div></section>`;
+}
+
+function curMonth(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)}
+let mon=curMonth();
+function monthStats(m){
+  const y=m.getFullYear(),mo=m.getMonth(),days=new Date(y,mo+1,0).getDate();
+  let w=0,wn=0,sl=0,sn=0,wa=0,wan=0,exd=0,exm=0,hk=0,rec=0;
+  for(let i=1;i<=days;i++){const e=S.entries[keyOf(new Date(y,mo,i))];if(!e||isEmpty(e))continue;rec++;
+    const ww=parseFloat(e.weight);if(ww){w+=ww;wn++}
+    const s=parseFloat(e.sleep);if(s){sl+=s;sn++}
+    if(e.water){wa+=e.water;wan++}
+    const m2=parseFloat(e.exMin)||0;if((e.ex||[]).some(x=>x!=='쉼')||m2){exd++;exm+=m2}
+    hk+=kept(e)}
+  return{days,rec,w:wn?w/wn:null,wn,sl:sn?sl/sn:null,wa:wan?wa/wan:null,exd,exm,hk:rec?hk/rec:null};
+}
+function vMonth(){
+  const y=mon.getFullYear(),mo=mon.getMonth(),t=today(),cm=curMonth();
+  const isCur=mon.getTime()===cm.getTime();
+  const st=monthStats(mon),pv=monthStats(new Date(y,mo-1,1));
+  const elapsed=isCur?new Date().getDate():st.days;
+  const hs=habits();
+  let tracker;
+  if(hs.length){
+    let head='<th scope="col" class="hn"><span class="sr">습관</span></th>';
+    for(let i=1;i<=st.days;i++){const d=new Date(y,mo,i),k=keyOf(d);head+=`<th scope="col" class="${d.getDay()===0?'sun':''}"${k===t?' id="tdcol"':''}>${i}<small>${WD[d.getDay()]}</small></th>`}
+    head+='<th scope="col">달성</th>';
+    const rows=hs.map(h=>{let c=0,cells='';
+      for(let i=1;i<=st.days;i++){const k=keyOf(new Date(y,mo,i)),e=S.entries[k],on=!!(e&&(e.habits||[]).includes(h.id));if(on)c++;
+        cells+=`<td><button class="cell${on?' on':''}" data-tk="${k}|${h.id}" ${k>t?'disabled':''} aria-pressed="${on}" aria-label="${mo+1}월 ${i}일 ${esc(h.t)}">${on?'✓':''}</button></td>`}
+      return `<tr><th scope="row" class="hn" title="${esc(h.t)}"><span class="tag">${h.tag}</span>${esc(h.t)}</th>${cells}<td class="rate">${Math.round(c/elapsed*100)}%</td></tr>`}).join('');
+    tracker=`<div class="tracker"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  } else tracker=`<div class="note">아직 습관을 안 정했어요. <b>버릴 습관, 채울 습관</b>을 정하면 여기에 한 달 트래커가 생겨요.<div class="mt"><a class="btn" href="#plan" style="display:inline-block;text-decoration:none">습관 정하러 가기</a></div></div>`;
+  let wd='';if(st.w&&pv.w){const d=st.w-pv.w;wd=Math.abs(d)<0.05?'지난달과 비슷해요':d<0?`지난달보다 ${Math.abs(d).toFixed(1)}kg ↓`:`지난달보다 ${d.toFixed(1)}kg ↑`}
+  const f1=v=>v==null?'–':v.toFixed(1);
+  const stat=(l,v,u,s)=>`<div class="stat"><div class="l">${l}</div><div class="v">${v}${u?`<small> ${u}</small>`:''}</div>${s?`<div class="s">${s}</div>`:''}</div>`;
+  const stats=`<div class="stats">${stat('평균 체중',f1(st.w),'kg',st.wn?(wd||st.wn+'일 기록'):'')}${stat('평균 수면',f1(st.sl),'시간','')}${stat('평균 물',f1(st.wa),'잔','')}${stat('운동한 날',st.exd,'일',st.exm?'총 '+st.exm+'분':'')}${stat('하루 평균 지킨 습관',f1(st.hk),'개','')}${stat('기록한 날',st.rec,'일',elapsed+'일 중')}</div>`;
+  const pts=[];for(let i=5;i>=0;i--){const m=new Date(y,mo-i,1);pts.push({m,v:monthStats(m).w})}
+  const have=pts.filter(p=>p.v);let chart='';
+  if(have.length>=2){
+    const vs=have.map(p=>p.v),mn=Math.min(...vs)-0.5,mx=Math.max(...vs)+0.5,W=480,H=150,px=i=>30+i*(W-60)/5,py=v=>14+(H-44)*(1-(v-mn)/(mx-mn));
+    let path='',dots='',labs='';
+    pts.forEach((p,i)=>{labs+=`<text x="${px(i)}" y="${H-6}" text-anchor="middle" font-size="11" fill="var(--muted)">${p.m.getMonth()+1}월</text>`;
+      if(p.v){path+=(path?'L':'M')+px(i)+' '+py(p.v);dots+=`<circle cx="${px(i)}" cy="${py(p.v)}" r="4" fill="var(--plum)"/><text x="${px(i)}" y="${py(p.v)-10}" text-anchor="middle" font-size="11" fill="var(--ink)">${p.v.toFixed(1)}</text>`}});
+    chart=`<section><h2>월별 평균 체중</h2><div class="panel"><div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 6개월 월별 평균 체중"><path d="${path}" fill="none" stroke="var(--plum)" stroke-width="2"/>${dots}${labs}</svg></div></div></section>`;
+  }
+  return `
+  <header class="top"><div class="brand">💜 루아핏 습관 기록</div>
+  <h1>한 달을 한눈에</h1>
+  <p class="sub">빈칸이 있어도 괜찮아요. 초록 칸이 조금씩 늘어나는 걸 보면 돼요.</p></header>
+  <div class="mnav"><button data-mon="-1" aria-label="이전 달">‹</button><span class="t">${y}년 ${mo+1}월</span><button data-mon="1" aria-label="다음 달" ${isCur?'disabled':''}>›</button></div>
+  <section><h2>해빗 트래커</h2>
+  <p class="hint">칸을 눌러 바로 체크할 수 있어요. 달성률은 ${isCur?'오늘까지':'이 달 전체'} 기준이에요.</p>${tracker}</section>
+  <section><h2>월간 평균</h2>${stats}</section>${chart}`;
+}
+
+/* ---------- router ---------- */
+const app=document.getElementById('app');
+function tab(){const h=(location.hash||'').slice(1);return['today','week','month','plan'].includes(h)?h:'today'}
+function render(){
+  const t=tab();
+  app.innerHTML=t==='week'?vWeek():t==='month'?vMonth():t==='plan'?vPlan():vToday();
+  if(t==='month'){const tr=app.querySelector('.tracker'),c=document.getElementById('tdcol');if(tr&&c)tr.scrollLeft=Math.max(0,c.offsetLeft-160)}
+  document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.dataset.tab===t)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+}
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+
+/* ---------- events ---------- */
+function setPlan(path,val){const[a,b]=path.split('.');if(a==='drop'||a==='fill')S.plan[a][+b]=val;else S.plan[a][b]=val}
+app.addEventListener('input',ev=>{
+  const el=ev.target;
+  if(el.dataset.f){const e=entry(sel,true);e[el.dataset.f]=el.value;save(true)}
+  else if(el.dataset.plan){setPlan(el.dataset.plan,el.value);save(true)}
+});
+app.addEventListener('change',ev=>{
+  const el=ev.target;
+  if(el.dataset.habit){const e=entry(sel,true),id=el.dataset.habit;e.habits=e.habits.filter(x=>x!==id);if(el.checked)e.habits.push(id);save(true);render()}
+  else if(el.hasAttribute('data-binge')){const e=entry(sel,true);e.binge=el.checked;save(true);render()}
+  else if(el.dataset.f||el.dataset.plan){toast('저장했어요');if(el.dataset.f==='weight')render()}
+});
+app.addEventListener('click',ev=>{
+  const b=ev.target.closest('button');if(!b)return;
+  if(b.dataset.tk){const[k,id]=b.dataset.tk.split('|'),e=entry(k,true);e.habits=e.habits||[];e.habits=e.habits.includes(id)?e.habits.filter(x=>x!==id):[...e.habits,id];save(true);
+    const sx=(app.querySelector('.tracker')||{}).scrollLeft;render();const tr=app.querySelector('.tracker');if(tr&&sx!=null)tr.scrollLeft=sx}
+  else if(b.dataset.mon){mon=new Date(mon.getFullYear(),mon.getMonth()+ +b.dataset.mon,1);render()}
+  else if(b.dataset.day){sel=b.dataset.day;render()}
+  else if(b.dataset.water){const e=entry(sel,true);e.water=Math.max(0,(e.water||0)+ +b.dataset.water);save(true);render()}
+  else if(b.dataset.ex){const e=entry(sel,true),x=b.dataset.ex;e.ex=(e.ex||[]).includes(x)?e.ex.filter(y=>y!==x):[...(e.ex||[]),x];save(true);render()}
+  else if(b.dataset.emo){const e=entry(sel,true),x=b.dataset.emo;e.emo=(e.emo||[]).includes(x)?e.emo.filter(y=>y!==x):[...(e.emo||[]),x];save(true);render()}
+  else if(b.dataset.open){sel=b.dataset.open;location.hash='today';if(tab()==='today')render()}
+  else if(b.hasAttribute('data-del')){if(confirm('이 날 기록을 지울까요?')){delete S.entries[sel];save();render()}}
+  else if(b.hasAttribute('data-bcopy')){
+    const code='LUAFIT:'+JSON.stringify(S);
+    const fallback=()=>{const t=document.getElementById('bin');t.value=code;t.focus();t.select();
+      let ok=false;try{ok=document.execCommand('copy')}catch(e){}
+      toast(ok?'백업 코드를 복사했어요':'아래 칸의 코드를 길게 눌러 전체 복사해 주세요')};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>toast('백업 코드를 복사했어요'),fallback);
+    else fallback();
+  }
+  else if(b.hasAttribute('data-bload')){
+    const raw=(document.getElementById('bin').value||'').trim().replace(/^LUAFIT:/,'');
+    let s;try{s=JSON.parse(raw)}catch(e){s=null}
+    if(!s||typeof s!=='object'||(!s.entries&&!s.plan)){toast('백업 코드가 올바르지 않아요. 복사한 코드 전체를 붙여넣어 주세요');return}
+    const n=Object.keys(s.entries||{}).length;
+    if(confirm('지금 기록을 백업 코드의 기록('+n+'일)으로 바꿀까요?')){S=norm(s);save(true);render();toast('백업을 불러왔어요')}
+  }
+  else if(b.hasAttribute('data-reset')){if(confirm('모든 기록과 계획을 지울까요? 되돌릴 수 없어요.')){S=norm({});save();render()}}
+});
+render();
+})();
+</script>
+</body>
+</html>
